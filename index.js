@@ -2,31 +2,32 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/persons')
 
 const app = express()
 
-let persons = [
-    {
-      id: 1,
-      name: "Arto Hellas",
-      number: "223-233-232"
-    },
-    {
-        id: 2,
-        name: "Samuel Johnson",
-        number: "124-2451-3543"
-    },
-    {
-        id: 3,
-        name: "Michelle Long",
-        number: "120-41-2332"
-    },      
-    {
-        id: 4,
-        name: "Mary Smith",
-        number: "110-242-00-1"
-    }
-]
+// let persons = [
+//     {
+//       id: 1,
+//       name: "Arto Hellas",
+//       number: "223-233-232"
+//     },
+//     {
+//         id: 2,
+//         name: "Samuel Johnson",
+//         number: "124-2451-3543"
+//     },
+//     {
+//         id: 3,
+//         name: "Michelle Long",
+//         number: "120-41-2332"
+//     },      
+//     {
+//         id: 4,
+//         name: "Mary Smith",
+//         number: "110-242-00-1"
+//     }
+// ]
 
 // Custom request time middleware
 var requestTime = function(req, res, next) {
@@ -51,7 +52,8 @@ app.get('/', (req, res) => {
   })
   
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({}, (err, docs) => {res.json(docs)})
+    // res.json(persons)
 })
 
 app.get('/info', (req, res) => {
