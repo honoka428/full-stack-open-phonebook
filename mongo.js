@@ -23,18 +23,26 @@ const person = new Person({
   number: process.argv[4],
 })
 
-person.save().then(result => {
-  console.log('person saved!')
-  mongoose.connection.close()
-})
-
-// Figure out why result is not being printed in console.
-if (process.argv.length = 3) {
-    Person.find({}).then(result => {
-        result.forEach(note => {
-          console.log(note)
-        })
-        mongoose.connection.close()
-    }).catch(err => console.log(err))
+if (process.argv.length === 3) {
+  Person.find({}, (err, docs) => {
+    if (!err){
+      console.log('Phonebook:')
+      docs.forEach(person => console.log(`${person.name}: ${person.number}`))
+    }
+    else {
+      console.log(`Error: ${err}`)
+    }
+    mongoose.connection.close()
     process.exit(1)
+  })
 }
+
+else {
+  console.log('inside 4+')
+
+  person.save().then(result => {
+    console.log('person saved!')
+    mongoose.connection.close()
+  })
+}
+
