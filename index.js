@@ -3,7 +3,6 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/persons')
-const { response } = require('express')
 
 const app = express()
 
@@ -84,7 +83,6 @@ app.delete('/api/persons/:id', (req, res, next) => {
 
 app.post('/api/persons', (req, res) => {
     body = req.body
-    console.log(body)
 
     if (!body.name || !body.number) {
         console.log('in 1')
@@ -93,25 +91,25 @@ app.post('/api/persons', (req, res) => {
         })
     }
 
+    const person = new Person({
+        name: body.name,
+        id: body.id,
+        number: body.number        
+    })
+    
+    person.save().then(result => {
+        console.log('person saved!')
+        res.json(Person)
+    })
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+    body = req.body
     Person
-        .exists({name: body.name})
-        .then( exists => {
-            if (exists) {
-                return res.status(400).json({ 
-                    error: 'Name already exists' 
-                })
-            }
-            else {
-                const person = new Person({
-                    name: body.name,
-                    id: body.id,
-                    number: body.number        
-                })
-                
-                person.save().then(result => {
-                    console.log('person saved!')
-                    res.json(Person)
-                })
+        .updateOne({ name: body.name }, { number: body.number})
+        .then( docs => {
+            if (docs) {
+                res.json(Person)
             }
         })
         .catch(err => next(err))
