@@ -6,11 +6,14 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix --ext .js,.jsx ."
   },
   "author": "Honoka Watanabe",
   "license": "ISC",
   "devDependencies": {
+    "eslint": "^7.12.1",
     "nodemon": "^2.0.6"
   },
   "dependencies": {

@@ -3,34 +3,33 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/persons')
-const e = require('express')
 
 const app = express()
 
 // Custom request time and errorhandler middleware
 var requestTime = function(req, res, next) {
-    req.requestTime = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-    next();
-};
+    req.requestTime = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
+    next()
+}
 
 const errorHandler = (error, request, response, next) => {
     console.error(error.message)
   
     if (error.name === 'CastError') {
-      return response.status(400).send({ error: 'malformatted id' })
+        return response.status(400).send({ error: 'malformatted id' })
     } else if (error.name === 'ValidationError') {
         return response.status(400).json({ error: error.message })
     }
     next(error)
-  }
+}
   
 // Custom token for morgan middleware
 morgan.token('content', function getContent (req) {
     return JSON.stringify(req.body)
-  })
-  
+})
+
 // Call middlewares
-app.use(requestTime);
+app.use(requestTime)
 app.use(bodyParser.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
 app.use(cors())
@@ -39,14 +38,14 @@ app.use(errorHandler)
 
 app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>')
-  })
+})
   
 app.get('/api/persons', (req, res) => {
     Person.find({}, (err, docs) => {res.json(docs)})
 })
 
 app.get('/info', (req, res) => {
-    var personCount = 0;
+    var personCount = 0
     Person.find({}, (err, docs) => {
         personCount = docs.length
 
@@ -63,9 +62,9 @@ app.get('/api/persons/:id', (req, res, next) => {
         .find({id: id})
         .then(docs => {
             if (docs) {
-              res.json(docs)
+                res.json(docs)
             } else {
-              res.status(404).end()
+                res.status(404).end()
             }
         })
         .catch(err => next(err))
@@ -84,7 +83,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 app.post('/api/persons', (req, res, next) => {
-    body = req.body
+    var body = req.body
 
     if (!body.name || !body.number) {
         console.log('in 1')
@@ -101,7 +100,7 @@ app.post('/api/persons', (req, res, next) => {
     
     person
         .save()
-        .then(result => {
+        .then(() => {
             console.log('person saved!')
             res.json(Person)
         })
@@ -109,7 +108,7 @@ app.post('/api/persons', (req, res, next) => {
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-    body = req.body
+    var body = req.body
     Person
         .updateOne({ name: body.name }, { number: body.number})
         .then( docs => {
