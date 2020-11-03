@@ -3,15 +3,26 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/persons')
+const { response } = require('express')
 
 const app = express()
 
-// Custom request time middleware
+// Custom request time and errorhandler middleware
 var requestTime = function(req, res, next) {
     req.requestTime = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
     next();
 };
 
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } 
+  
+    next(error)
+  }
+  
 // Custom token for morgan middleware
 morgan.token('content', function getContent (req) {
     return JSON.stringify(req.body)
@@ -23,6 +34,7 @@ app.use(bodyParser.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
 app.use(cors())
 app.use(express.static('build'))
+app.use(errorHandler)
 
 app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>')
@@ -44,27 +56,30 @@ app.get('/info', (req, res) => {
     })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     const id = Number(req.params.id)
-    Person.find({id: id},
-        (err, docs) => {
-            if (!err) {res.json(docs)}
-            else {res.status(404).end}
-        }
-    )
+    Person
+        .find({id: id})
+        .then(docs => {
+            if (docs) {
+              res.json(docs)
+            } else {
+              res.status(404).end()
+            }
+        })
+        .catch(err => next(err))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
     const id = Number(req.params.id)
-    Person.findOneAndDelete({ id: id },
-        (err, docs) => {
-            if (!err) {
-                res.json(docs)
-                res.status(204).end()
+    Person
+        .findOneAndDelete({ id: id })
+        .then( docs => {
+            if (docs) {
+                res.status(204).json(docs).end()
             }
-            else {console.log(err)}
-        }
-    )
+        })
+        .catch(err => next(err))
 })
 
 app.post('/api/persons', (req, res) => {
@@ -75,30 +90,31 @@ app.post('/api/persons', (req, res) => {
         console.log('in 1')
         return res.status(400).json({ 
             error: 'Name or number is missing' 
-          })
+        })
     }
 
-    Person.exists({name: body.name}, (err, exists) => {
-        if (exists) {
-            console.log('in 2')
-            return res.status(400).json({ 
-                error: 'Name already exists' 
-            })
-        }
-        else if (!exists) {
-            const person = new Person({
-                name: body.name,
-                id: body.id,
-                number: body.number        
-            })
-            
-            person.save().then(result => {
-                console.log('person saved!')
-                res.json(Person)
-            })
-        }
-        else { console.log(err)}
-    })
+    Person
+        .exists({name: body.name})
+        .then( exists => {
+            if (exists) {
+                return res.status(400).json({ 
+                    error: 'Name already exists' 
+                })
+            }
+            else {
+                const person = new Person({
+                    name: body.name,
+                    id: body.id,
+                    number: body.number        
+                })
+                
+                person.save().then(result => {
+                    console.log('person saved!')
+                    res.json(Person)
+                })
+            }
+        })
+        .catch(err => next(err))
 })
 
 const PORT = process.env.PORT || 3001
